@@ -10,6 +10,9 @@ from .views import (
     RefreshTokenView,
     LogoutView,
     AdminLoginView,
+    ProfileUpdateView,
+    FollowToggleView,
+    ProfileDetailView,
 )
 
 urlpatterns = [
@@ -27,6 +30,9 @@ urlpatterns = [
     
     # User endpoints
     path('user/', CurrentUserView.as_view(), name='get_current_user'),
+    path('user/update/', ProfileUpdateView.as_view(), name='update_profile'),
+    path('users/<str:username>/', ProfileDetailView.as_view(), name='profile_detail'),
+    path('users/<str:username>/follow/', FollowToggleView.as_view(), name='toggle_follow'),
     path('refresh/', RefreshTokenView.as_view(), name='refresh_token'),
     path('logout/', LogoutView.as_view(), name='logout'),
     path('admin/login/', AdminLoginView.as_view(), name='admin_login'),

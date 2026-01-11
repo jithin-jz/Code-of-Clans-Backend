@@ -9,7 +9,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = UserProfile
-        fields = ['provider', 'avatar_url', 'created_at']
+        fields = ['provider', 'avatar_url', 'banner_url', 'bio', 'created_at']
+
 
 
 class UserSerializer(serializers.ModelSerializer):

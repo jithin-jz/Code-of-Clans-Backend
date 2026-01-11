@@ -36,10 +36,13 @@ class OAuthUserMixin:
             user = profile.user
             
             # Update profile with new tokens
+            # Update profile with new tokens
             profile.access_token = access_token
             if refresh_token:
                 profile.refresh_token = refresh_token
-            profile.avatar_url = avatar_url
+            # Only set avatar if missing (don't overwrite custom uploads)
+            if not profile.avatar_url:
+                profile.avatar_url = avatar_url
             profile.save()
             
         except UserProfile.DoesNotExist:
@@ -68,7 +71,9 @@ class OAuthUserMixin:
                 profile = user.profile
                 profile.provider = provider
                 profile.provider_id = provider_id
-                profile.avatar_url = avatar_url
+                # Only set avatar if missing
+                if not profile.avatar_url:
+                    profile.avatar_url = avatar_url
                 profile.access_token = access_token
                 if refresh_token:
                     profile.refresh_token = refresh_token
@@ -410,3 +415,112 @@ class AdminLoginView(APIView):
             'refresh_token': tokens['refresh_token'],
             'user': UserSerializer(user).data
         })
+        
+        
+class ProfileUpdateView(APIView):
+    """View to update user profile (avatar, banner, bio)."""
+    permission_classes = [IsAuthenticated]
+    
+    def patch(self, request):
+        user = request.user
+        data = request.data
+        
+        # Update User model fields
+        if 'username' in data:
+            user.username = data['username']
+        if 'first_name' in data:
+            user.first_name = data['first_name']
+        if 'last_name' in data:
+            user.last_name = data['last_name']
+        user.save()
+        
+        # Update UserProfile fields
+        profile = user.profile
+        if 'bio' in data:
+            profile.bio = data['bio']
+            
+        # Handle file uploads
+        if 'avatar' in request.FILES:
+            from .supabase_client import StorageService
+            try:
+                avatar_url = StorageService.upload_file(
+                    request.FILES['avatar'], 
+                    f"avatars/{user.id}_{request.FILES['avatar'].name}"
+                )
+                profile.avatar_url = avatar_url
+            except Exception as e:
+                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+                
+        if 'banner' in request.FILES:
+            from .supabase_client import StorageService
+            try:
+                banner_url = StorageService.upload_file(
+                    request.FILES['banner'], 
+                    f"banners/{user.id}_{request.FILES['banner'].name}"
+                )
+                profile.banner_url = banner_url
+            except Exception as e:
+                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+        profile.save()
+        
+        return Response(UserSerializer(user).data)
+
+
+class FollowToggleView(APIView):
+    """View to toggle follow status."""
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request, username):
+        try:
+            target_user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+            
+        if target_user == request.user:
+            return Response({'error': 'Cannot follow yourself'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        from .models import UserFollow
+        
+        follow, created = UserFollow.objects.get_or_create(
+            follower=request.user,
+            following=target_user
+        )
+        
+        if not created:
+            # If relationship exists, unfollow
+            follow.delete()
+            is_following = False
+        else:
+            is_following = True
+            
+        return Response({
+            'is_following': is_following,
+            'follower_count': target_user.followers.count(),
+            'following_count': target_user.following.count()
+        })
+
+
+class ProfileDetailView(APIView):
+    """View to get public profile details."""
+    permission_classes = [AllowAny]
+    
+    def get(self, request, username):
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+            
+        data = UserSerializer(user).data
+        
+        # Add stats
+        data['followers_count'] = user.followers.count()
+        data['following_count'] = user.following.count()
+        
+        # Check if requesting user is following
+        if request.user.is_authenticated:
+            data['is_following'] = user.followers.filter(follower=request.user).exists()
+        else:
+            data['is_following'] = False
+            
+        return Response(data)

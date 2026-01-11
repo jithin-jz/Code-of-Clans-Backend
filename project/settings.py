@@ -185,3 +185,7 @@ GOOGLE_REDIRECT_URI = f"{FRONTEND_URL}/auth/google/callback"
 DISCORD_CLIENT_ID = os.getenv('DISCORD_CLIENT_ID', '')
 DISCORD_CLIENT_SECRET = os.getenv('DISCORD_CLIENT_SECRET', '')
 DISCORD_REDIRECT_URI = f"{FRONTEND_URL}/auth/discord/callback"
+
+# Supabase Settings
+SUPABASE_URL = os.getenv('SUPABASE_URL', '')
+SUPABASE_KEY = os.getenv('SUPABASE_KEY', '')

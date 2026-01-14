@@ -524,3 +524,57 @@ class ProfileDetailView(APIView):
             data['is_following'] = False
             
         return Response(data)
+
+
+class RedeemReferralView(APIView):
+    """View to redeem a referral code."""
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        code = request.data.get('code')
+        
+        if not code:
+            return Response({'error': 'Referral code is required'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        try:
+            profile = request.user.profile
+        except UserProfile.DoesNotExist:
+            return Response({'error': 'User profile not found'}, status=status.HTTP_404_NOT_FOUND)
+            
+        if profile.referred_by:
+            return Response({'error': 'You have already redeemed a referral code'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        if profile.referral_code == code:
+            return Response({'error': 'Cannot redeem your own referral code'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        try:
+            referrer_profile = UserProfile.objects.get(referral_code=code)
+        except UserProfile.DoesNotExist:
+            return Response({'error': 'Invalid referral code'}, status=status.HTTP_404_NOT_FOUND)
+            
+        # Update user profile
+        profile.referred_by = referrer_profile.user
+        profile.xp += 100  # Award 100 XP
+        profile.save()
+        
+        # We also might want to award XP to the referrer? 
+        # The prompt says "user enter referal code and get xp", implying the one entering gets it.
+        # It doesn't explicitly say the referrer gets it, but usually they do. 
+        # I'll stick to the prompt: only the user entering gets XP for now, but commonly both do.
+        # "user enter referal code and get xp only one time" -> Focus on the enterer.
+        
+        return Response({
+            'message': 'Referral code redeemed successfully',
+            'xp_awarded': 100,
+            'new_total_xp': profile.xp
+        })
+
+
+class DeleteAccountView(APIView):
+    """View to delete the user account."""
+    permission_classes = [IsAuthenticated]
+    
+    def delete(self, request):
+        user = request.user
+        user.delete()
+        return Response({'message': 'Account deleted successfully'})

@@ -13,6 +13,8 @@ from .views import (
     ProfileUpdateView,
     FollowToggleView,
     ProfileDetailView,
+    RedeemReferralView,
+    DeleteAccountView
 )
 
 urlpatterns = [
@@ -31,6 +33,8 @@ urlpatterns = [
     # User endpoints
     path('user/', CurrentUserView.as_view(), name='get_current_user'),
     path('user/update/', ProfileUpdateView.as_view(), name='update_profile'),
+    path('user/redeem-referral/', RedeemReferralView.as_view(), name='redeem_referral'),
+    path('user/delete/', DeleteAccountView.as_view(), name='delete_account'),
     path('users/<str:username>/', ProfileDetailView.as_view(), name='profile_detail'),
     path('users/<str:username>/follow/', FollowToggleView.as_view(), name='toggle_follow'),
     path('refresh/', RefreshTokenView.as_view(), name='refresh_token'),

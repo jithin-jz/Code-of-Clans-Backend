@@ -7,9 +7,14 @@ from .models import UserProfile
 class UserProfileSerializer(serializers.ModelSerializer):
     """Serializer for UserProfile model."""
     
+    is_referred = serializers.SerializerMethodField()
+
     class Meta:
         model = UserProfile
-        fields = ['provider', 'avatar_url', 'banner_url', 'bio', 'created_at']
+        fields = ['provider', 'avatar_url', 'banner_url', 'bio', 'xp', 'referral_code', 'is_referred', 'created_at']
+        
+    def get_is_referred(self, obj):
+        return obj.referred_by is not None
 
 
 

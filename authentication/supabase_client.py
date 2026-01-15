@@ -5,12 +5,18 @@ from django.conf import settings
 def get_supabase_client() -> Client:
     url = settings.SUPABASE_URL
     key = settings.SUPABASE_KEY
+    
     if not url or not key:
+        print("Supabase credentials missing in settings.")
         return None
-    # Ensure URL doesn't have a trailing slash for the client creation, 
-    # but some internal libs might need it. The warning suggests ADDING it, 
-    # but standard setup often doesn't need manual tweaking.
-    # However, creating the client usually handles normalization.
+
+    # Fix: Ensure URL starts with https:// and has no trailing slash
+    if not url.startswith("http"):
+        url = f"https://{url}"
+    
+    url = url.rstrip('/')
+    
+    print(f"Initializing Supabase Client with URL: {url}")
     return create_client(url, key)
 
 class StorageService:
@@ -25,6 +31,8 @@ class StorageService:
             raise Exception("Supabase credentials not configured")
 
         try:
+            print(f"Starting upload for {path} to bucket {bucket}...")
+            
             # Read file content
             file_content = file.read()
             
@@ -37,8 +45,10 @@ class StorageService:
             
             # Get public URL
             public_url = supabase.storage.from_(bucket).get_public_url(path)
+            print(f"Upload successful. Public URL: {public_url}")
             return public_url
             
         except Exception as e:
-            print(f"Supabase upload error: {str(e)}")
+            print(f"Supabase upload error for {path}: {str(e)}")
+            # Raise the original exception to be caught by the view
             raise e

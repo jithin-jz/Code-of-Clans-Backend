@@ -44,6 +44,12 @@ class UserProfile(models.Model):
                     break
         super().save(*args, **kwargs)
     
+    def toggle_block(self):
+        """Toggle the active status of the associated user."""
+        self.user.is_active = not self.user.is_active
+        self.user.save()
+        return self.user.is_active
+
     def __str__(self):
         return f"{self.user.username} ({self.provider})"
 
@@ -61,3 +67,17 @@ class UserFollow(models.Model):
 
     def __str__(self):
         return f"{self.follower.username} follows {self.following.username}"
+
+
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created and not hasattr(instance, 'profile'):
+        UserProfile.objects.create(
+            user=instance,
+            provider='local',
+            provider_id=f"local_{instance.id}",
+            bio="Administrator" if instance.is_superuser else "User"
+        )

@@ -31,5 +31,8 @@ class JWTAuthentication(authentication.BaseAuthentication):
             user = User.objects.get(id=payload['user_id'])
         except User.DoesNotExist:
             raise exceptions.AuthenticationFailed('User not found')
+
+        if not user.is_active:
+            raise exceptions.AuthenticationFailed('User account is disabled.')
         
         return (user, token)

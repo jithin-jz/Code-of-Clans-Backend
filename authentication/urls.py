@@ -16,7 +16,9 @@ from .views import (
     RedeemReferralView,
     DeleteAccountView,
     UserFollowersView,
-    UserFollowingView
+    UserFollowingView,
+    UserListView,
+    UserBlockToggleView
 )
 
 urlpatterns = [
@@ -44,4 +46,6 @@ urlpatterns = [
     path('refresh/', RefreshTokenView.as_view(), name='refresh_token'),
     path('logout/', LogoutView.as_view(), name='logout'),
     path('admin/login/', AdminLoginView.as_view(), name='admin_login'),
+    path('admin/users/', UserListView.as_view(), name='admin_user_list'),
+    path('admin/users/<str:username>/toggle-block/', UserBlockToggleView.as_view(), name='admin_toggle_block_user'),
 ]

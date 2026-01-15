@@ -1,68 +1,81 @@
 # Code of Clans - Backend
 
-The backend API for **Code of Clans**, built with Django and Django REST Framework. It handles authentication, data management, and integration with Supabase.
+The robust backend API and real-time server for the Code of Clans platform, built with Django and Django Channels.
 
-## 🛠️ Tech Stack
+## 🚀 Tech Stack
 
--   **Django 6.0**: High-level Python web framework.
--   **Django REST Framework**: Toolkit for building Web APIs.
--   **Supabase / PostgreSQL**: Database and storage solution.
--   **OAuth2**: Authentication via GitHub, Google, and Discord.
+- **Framework:** [Django 6](https://www.djangoproject.com/)
+- **API:** [Django REST Framework](https://www.django-rest-framework.org/)
+- **Real-time:** [Django Channels](https://channels.readthedocs.io/) (WebSockets)
+- **Database:** PostgreSQL (via [Supabase](https://supabase.com/))
+- **Authentication:** JWT (JSON Web Tokens) + OAuth (GitHub, Google, Discord)
+- **Storage:** Supabase Storage (Buckets)
 
-## 📂 Apps
+## ✨ Features
 
--   `authentication`: Handles user registration, login, and OAuth flows.
--   `project`: Main project configuration and settings.
+- **REST API:** Endpoints for user management, profiles, and auth.
+- **WebSocket Server:** Handles real-time global chat messaging.
+- **OAuth Integration:** Seamless login with multiple providers.
+- **Referral System:** Built-in referral code logic and XP tracking.
 
-## 🔑 Environment Variables
+## 🛠️ Setup & Installation
 
-Create a `.env` file in this directory with the following keys:
+1.  **Clone the repository**.
 
-```ini
-# Django
-SECRET_KEY=your_django_secret_key
-DEBUG=True
-FRONTEND_URL=http://localhost:5173
-
-# Database (Supabase PostgreSQL Connection URL)
-DATABASE_URL=postgres://user:password@host:port/dbname
-
-# OAuth Providers
-GITHUB_CLIENT_ID=...
-GITHUB_CLIENT_SECRET=...
-GOOGLE_CLIENT_ID=...
-GOOGLE_CLIENT_SECRET=...
-DISCORD_CLIENT_ID=...
-DISCORD_CLIENT_SECRET=...
-
-# Supabase Storage
-SUPABASE_URL=...
-SUPABASE_KEY=...
-```
-
-## 🚀 Setup & Run
-
-1.  **Create Virtual Environment**:
+2.  **Create a virtual environment**:
     ```bash
+    cd backend
     python -m venv .venv
-    .\.venv\Scripts\activate  # Windows
+    # Windows
+    .venv\Scripts\activate
+    # Mac/Linux
+    source .venv/bin/activate
     ```
 
-2.  **Install Dependencies**:
+3.  **Install dependencies**:
     ```bash
     pip install -r requirements.txt
     ```
+    *Note: If `channels` or `daphne` are missing, install them: `pip install channels daphne`*
 
-3.  **Run Migrations**:
+4.  **Environment Variables**:
+    Create a `.env` file in the `backend` directory with the following keys:
+    ```env
+    SECRET_KEY=your_secret_key
+    DEBUG=True
+    
+    # Database (Supabase Request)
+    DATABASE_URL=postgresql://user:password@host:port/dbname
+    
+    # Supabase (For Storage Buckets)
+    SUPABASE_URL=https://your-project.supabase.co
+    SUPABASE_KEY=your_supabase_anon_key
+
+    # OAuth Credentials
+    GITHUB_CLIENT_ID=...
+    GITHUB_CLIENT_SECRET=...
+    GOOGLE_CLIENT_ID=...
+    GOOGLE_CLIENT_SECRET=...
+    DISCORD_CLIENT_ID=...
+    DISCORD_CLIENT_SECRET=...
+
+    # Frontend URL (for CORS/Redirects)
+    FRONTEND_URL=http://localhost:5173
+    ```
+
+5.  **Run Migrations**:
     ```bash
     python manage.py migrate
     ```
 
-4.  **Start Server**:
+6.  **Run Development Server**:
     ```bash
     python manage.py runserver
     ```
+    *The server will run on `http://127.0.0.1:8000`. WebSockets are available at `ws://127.0.0.1:8000/ws/chat/`.*
 
-## 📜 Scripts
+## 📂 Project Structure
 
--   `scripts/process_new_assets.py`: Utility to process and clean green-screen assets.
+- `authentication/`: User models, views, and OAuth logic.
+- `chat/`: WebSocket consumers (`consumers.py`) and routing (`routing.py`).
+- `project/`: Main Django settings and URL configuration.

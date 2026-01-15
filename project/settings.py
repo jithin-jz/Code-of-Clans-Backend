@@ -21,7 +21,9 @@ ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
 # Applications
 INSTALLED_APPS = [
+    "daphne",
     "django.contrib.admin",
+    "channels",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -29,7 +31,9 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "corsheaders",
+
     "authentication",
+    "chat",
 ]
 
 # Middleware
@@ -65,6 +69,14 @@ TEMPLATES = [
 
 # WSGI
 WSGI_APPLICATION = "project.wsgi.application"
+
+ASGI_APPLICATION = "project.asgi.application"
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
+    }
+}
 
 # Database
 DATABASE_URL = os.getenv("DATABASE_URL")

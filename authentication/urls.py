@@ -14,7 +14,9 @@ from .views import (
     FollowToggleView,
     ProfileDetailView,
     RedeemReferralView,
-    DeleteAccountView
+    DeleteAccountView,
+    UserFollowersView,
+    UserFollowingView
 )
 
 urlpatterns = [
@@ -37,6 +39,8 @@ urlpatterns = [
     path('user/delete/', DeleteAccountView.as_view(), name='delete_account'),
     path('users/<str:username>/', ProfileDetailView.as_view(), name='profile_detail'),
     path('users/<str:username>/follow/', FollowToggleView.as_view(), name='toggle_follow'),
+    path('users/<str:username>/followers/', UserFollowersView.as_view(), name='user_followers'),
+    path('users/<str:username>/following/', UserFollowingView.as_view(), name='user_following'),
     path('refresh/', RefreshTokenView.as_view(), name='refresh_token'),
     path('logout/', LogoutView.as_view(), name='logout'),
     path('admin/login/', AdminLoginView.as_view(), name='admin_login'),

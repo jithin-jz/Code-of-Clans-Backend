@@ -501,6 +501,75 @@ class FollowToggleView(APIView):
         })
 
 
+
+class UserFollowersView(APIView):
+    """View to get list of followers for a user."""
+    permission_classes = [AllowAny]
+
+    def get(self, request, username):
+        try:
+            target_user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        followers = target_user.followers.all()
+        # We want to show: username, avatar, and if the *requesting user* is following them
+        
+        data = []
+        auth_user = request.user
+        
+        for rel in followers:
+            follower_user = rel.follower
+            is_following = False
+            if auth_user.is_authenticated:
+                is_following = auth_user.following.filter(following=follower_user).exists()
+            
+            profile = getattr(follower_user, 'profile', None)
+            
+            data.append({
+                'username': follower_user.username,
+                'first_name': follower_user.first_name,
+                'avatar_url': profile.avatar_url if profile else None,
+                'is_following': is_following
+            })
+            
+        return Response(data)
+
+
+class UserFollowingView(APIView):
+    """View to get list of users a user is following."""
+    permission_classes = [AllowAny]
+
+    def get(self, request, username):
+        try:
+            target_user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        following = target_user.following.all()
+        
+        data = []
+        auth_user = request.user
+        
+        for rel in following:
+            following_user = rel.following
+            is_following = False
+            if auth_user.is_authenticated:
+                 # Check if auth user is following this person (who target_user is also following)
+                is_following = auth_user.following.filter(following=following_user).exists()
+                
+            profile = getattr(following_user, 'profile', None)
+            
+            data.append({
+                'username': following_user.username,
+                'first_name': following_user.first_name,
+                'avatar_url': profile.avatar_url if profile else None,
+                'is_following': is_following
+            })
+            
+        return Response(data)
+
+
 class ProfileDetailView(APIView):
     """View to get public profile details."""
     permission_classes = [AllowAny]

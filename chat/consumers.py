@@ -49,7 +49,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
         print(f"WS Receive: {text_data}")
         data = json.loads(text_data)
         message = data['message']
-        username = self.scope["user"].username
+        user = self.scope["user"]
+        username = user.username
+        
+        # Get user data safely
+        user_data = await self.get_user_data(user)
 
         # Save to DB
         await self.save_message(message)
@@ -60,14 +64,18 @@ class ChatConsumer(AsyncWebsocketConsumer):
             {
                 'type': 'chat_message',
                 'message': message,
-                'username': username
+                'username': username,
+                'user_id': user_data['user_id'],
+                'avatar_url': user_data['avatar_url']
             }
         )
 
     async def chat_message(self, event):
         await self.send(text_data=json.dumps({
             'message': event['message'],
-            'username': event['username']
+            'username': event['username'],
+            'user_id': event.get('user_id'),
+            'avatar_url': event.get('avatar_url')
         }))
     
     async def user_count(self, event):
@@ -94,4 +102,33 @@ class ChatConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def get_last_50_messages(self):
         messages = Message.objects.all().order_by('-timestamp')[:50]
-        return [{'username': m.user.username, 'message': m.content} for m in reversed(messages)]
+        result = []
+        for m in reversed(messages):
+            avatar_url = None
+            try:
+                if hasattr(m.user, 'profile'):
+                    avatar_url = m.user.profile.avatar_url
+            except Exception:
+                pass
+            
+            result.append({
+                'username': m.user.username,
+                'message': m.content,
+                'user_id': m.user.id,
+                'avatar_url': avatar_url
+            })
+        return result
+
+    @database_sync_to_async
+    def get_user_data(self, user):
+        avatar_url = None
+        try:
+            if hasattr(user, 'profile'):
+                avatar_url = user.profile.avatar_url
+        except Exception:
+            pass
+            
+        return {
+            'user_id': user.id,
+            'avatar_url': avatar_url
+        }

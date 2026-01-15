@@ -34,6 +34,7 @@ INSTALLED_APPS = [
 
     "authentication",
     "chat",
+    'rewards',
 ]
 
 # Middleware

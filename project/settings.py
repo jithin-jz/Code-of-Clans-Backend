@@ -97,13 +97,14 @@ CHANNEL_LAYERS = {
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "code of clan",
-        "USER": "postgres",
-        "PASSWORD": "9562",
-        "HOST": "127.0.0.1",
-        "PORT": "5432",
+        "NAME": os.getenv("DB_NAME", "code of clan"),
+        "USER": os.getenv("DB_USER", "postgres"),
+        "PASSWORD": os.getenv("DB_PASSWORD", "9562"),
+        "HOST": os.getenv("DB_HOST", "127.0.0.1"),
+        "PORT": os.getenv("DB_PORT", "5432"),
     }
 }
+
 
 
 # Password validation

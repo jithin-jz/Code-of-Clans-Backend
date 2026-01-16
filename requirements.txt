@@ -16,7 +16,6 @@ sqlparse==0.5.5
 tzdata==2025.3
 urllib3==2.6.3
 supabase==2.3.0
-
 psycopg2-binary==2.9.9
 daphne
 channels

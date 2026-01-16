@@ -79,7 +79,8 @@ CHANNEL_LAYERS = {
     }
 }
 
-# Database
+# Supabase 
+
 # DATABASE_URL = os.getenv("DATABASE_URL")
 # if not DATABASE_URL:
 #     raise ImproperlyConfigured("DATABASE_URL is not set")
@@ -103,8 +104,6 @@ DATABASES = {
         "PORT": "5432",
     }
 }
-
-
 
 
 # Password validation

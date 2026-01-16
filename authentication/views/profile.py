@@ -28,6 +28,10 @@ class ProfileUpdateView(APIView):
         profile = user.profile
         if 'bio' in data:
             profile.bio = data['bio']
+        if 'github_username' in data:
+            profile.github_username = data['github_username']
+        if 'leetcode_username' in data:
+            profile.leetcode_username = data['leetcode_username']
             
         # Handle file uploads
         if 'avatar' in request.FILES:

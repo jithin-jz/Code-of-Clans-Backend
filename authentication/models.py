@@ -19,6 +19,10 @@ class UserProfile(models.Model):
     bio = models.TextField(max_length=500, blank=True, null=True)
     access_token = models.TextField(blank=True, null=True)
     refresh_token = models.TextField(blank=True, null=True)
+
+    # Social Accounts
+    github_username = models.CharField(max_length=100, blank=True, null=True)
+    leetcode_username = models.CharField(max_length=100, blank=True, null=True)
     
     # Referral System
     xp = models.IntegerField(default=0)

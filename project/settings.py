@@ -80,16 +80,32 @@ CHANNEL_LAYERS = {
 }
 
 # Database
-DATABASE_URL = os.getenv("DATABASE_URL")
-if not DATABASE_URL:
-    raise ImproperlyConfigured("DATABASE_URL is not set")
+# DATABASE_URL = os.getenv("DATABASE_URL")
+# if not DATABASE_URL:
+#     raise ImproperlyConfigured("DATABASE_URL is not set")
+
+# DATABASES = {
+#     "default": dj_database_url.config(
+#         default=DATABASE_URL,
+#         conn_max_age=600,
+#     )
+# }
+
+#pgadmin
 
 DATABASES = {
-    "default": dj_database_url.config(
-        default=DATABASE_URL,
-        conn_max_age=600,
-    )
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "code of clan",
+        "USER": "postgres",
+        "PASSWORD": "9562",
+        "HOST": "127.0.0.1",
+        "PORT": "5432",
+    }
 }
+
+
+
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [

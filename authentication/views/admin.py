@@ -55,16 +55,11 @@ class UserBlockToggleView(APIView):
         if user == request.user:
              return Response({'error': 'Cannot block yourself'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Use the model method
-        if hasattr(user, 'profile'):
-            is_active = user.profile.toggle_block()
-        else:
-            # Fallback if no profile (though we fixed this)
-            user.is_active = not user.is_active
-            user.save()
-            is_active = user.is_active
+        # Toggle status directly on user model
+        user.is_active = not user.is_active
+        user.save()
         
         return Response({
-            'message': f"User {'unblocked' if is_active else 'blocked'} successfully",
-            'is_active': is_active
+            'message': f"User {'unblocked' if user.is_active else 'blocked'} successfully",
+            'is_active': user.is_active
         })

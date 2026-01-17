@@ -6,32 +6,30 @@ import logging
 logger = logging.getLogger(__name__)
 
 def send_welcome_email(user):
-    """
-    Sends a welcome email to a newly registered user.
-    """
     subject = "Welcome to Code of Clans!"
-    
-    # Simple text message for now. 
-    # In the future, we can use a proper HTML template.
-    message = f"""
-    Hi {user.first_name or user.username},
 
-    Welcome to Code of Clans! We're excited to have you on board.
-
-    Get ready to code, battle, and level up!
-
-    Best regards,
-    The Code of Clans Team
-    """
-    
     try:
+        context = {"user": user}
+
+        html_message = render_to_string("emails/welcome.html", context)
+
+        plain_message = (
+            f"Welcome to Code of Clans!\n\n"
+            f"Hi {user.first_name or user.username},\n"
+            "We're excited to have you on board.\n"
+            "Log in to start your journey."
+        )
+
         send_mail(
             subject=subject,
-            message=message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
+            message=plain_message,
+            from_email="Code of Clans <noreply@codeofclans.com>",
             recipient_list=[user.email],
-            fail_silently=False, 
+            html_message=html_message,
+            fail_silently=False,
         )
-        logger.info(f"Welcome email sent to {user.email}")
-    except Exception as e:
-        logger.error(f"Failed to send welcome email to {user.email}: {str(e)}")
+
+        logger.info("Welcome email sent to %s", user.email)
+
+    except Exception:
+        logger.exception("Failed to send welcome email to %s", user.email)

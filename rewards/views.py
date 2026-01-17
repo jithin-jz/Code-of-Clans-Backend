@@ -6,13 +6,20 @@ from django.utils import timezone
 from datetime import timedelta
 from .models import DailyCheckIn
 from .serializers import DailyCheckInSerializer
-from authentication.models import UserProfile
+from users.models import UserProfile
 
 class CheckInView(APIView):
-    """Handle daily check-in and reward distribution."""
+    """
+    Handles the Daily Check-in Gamification System.
+    
+    Logic:
+    - **Streak Tracking**: Tracks consecutive days checked in.
+    - **Reset**: If a day is missed, streak resets to 1.
+    - **Rewards**: XP increases with higher streaks (up to day 7).
+    """
     permission_classes = [IsAuthenticated]
     
-    # XP rewards for each streak day
+    # XP rewards for each streak day (Day 1 -> 5 XP ... Day 7 -> 35 XP)
     DAILY_REWARDS = {
         1: 5,
         2: 10,

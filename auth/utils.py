@@ -9,7 +9,10 @@ from django.conf import settings
 
 
 def generate_access_token(user):
-    """Generate a JWT access token for the user."""
+    """
+    Generate a short-lived JWT access token.
+    Contains user identity (id, username, email) but no sensitive data.
+    """
     payload = {
         'user_id': user.id,
         'username': user.username,
@@ -22,7 +25,10 @@ def generate_access_token(user):
 
 
 def generate_refresh_token(user):
-    """Generate a JWT refresh token for the user."""
+    """
+    Generate a long-lived JWT refresh token.
+    Used to obtain new access tokens without re-login.
+    """
     payload = {
         'user_id': user.id,
         'exp': datetime.now(timezone.utc) + timedelta(seconds=settings.JWT_REFRESH_TOKEN_LIFETIME),
@@ -33,7 +39,10 @@ def generate_refresh_token(user):
 
 
 def decode_token(token):
-    """Decode and validate a JWT token."""
+    """
+    Decode and validate a JWT token.
+    Returns the payload dict if valid, or None if expired/invalid.
+    """
     try:
         payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
         return payload
@@ -44,7 +53,10 @@ def decode_token(token):
 
 
 def generate_tokens(user):
-    """Generate both access and refresh tokens."""
+    """
+    Helper to generate both access and refresh tokens for a user.
+    Usage: On Login, Registration, or Token Refresh.
+    """
     return {
         'access_token': generate_access_token(user),
         'refresh_token': generate_refresh_token(user),

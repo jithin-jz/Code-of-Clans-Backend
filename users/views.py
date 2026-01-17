@@ -4,18 +4,36 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from ..models import UserProfile
-from ..serializers import UserSerializer
+from .models import UserProfile, UserFollow
+from .serializers import UserSerializer
+
+# Helper to handle file uploads
+from auth.supabase_client import StorageService
+
+
+class CurrentUserView(APIView):
+    """Get the currently authenticated user."""
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        return Response(UserSerializer(request.user).data)
+
 
 class ProfileUpdateView(APIView):
-    """View to update user profile (avatar, banner, bio)."""
+    """
+    Updates the authenticated user's profile.
+    
+    Supports:
+    - **Text Fields**: username, first_name, last_name, bio, external links.
+    - **File Uploads**: avatar, banner (handled via StorageService).
+    """
     permission_classes = [IsAuthenticated]
     
     def patch(self, request):
         user = request.user
         data = request.data
         
-        # Update User model fields
+        # 1. Update Core User Model Fields
         if 'username' in data:
             user.username = data['username']
         if 'first_name' in data:
@@ -24,7 +42,7 @@ class ProfileUpdateView(APIView):
             user.last_name = data['last_name']
         user.save()
         
-        # Update UserProfile fields
+        # 2. Update Extended UserProfile Fields
         profile = user.profile
         if 'bio' in data:
             profile.bio = data['bio']
@@ -33,9 +51,8 @@ class ProfileUpdateView(APIView):
         if 'leetcode_username' in data:
             profile.leetcode_username = data['leetcode_username']
             
-        # Handle file uploads
+        # 3. Handle File Uploads (to Supabase Storage)
         if 'avatar' in request.FILES:
-            from ..supabase_client import StorageService
             try:
                 avatar_url = StorageService.upload_file(
                     request.FILES['avatar'], 
@@ -46,7 +63,6 @@ class ProfileUpdateView(APIView):
                 return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
                 
         if 'banner' in request.FILES:
-            from ..supabase_client import StorageService
             try:
                 banner_url = StorageService.upload_file(
                     request.FILES['banner'], 
@@ -99,8 +115,6 @@ class FollowToggleView(APIView):
         if target_user == request.user:
             return Response({'error': 'Cannot follow yourself'}, status=status.HTTP_400_BAD_REQUEST)
             
-        from ..models import UserFollow
-        
         follow, created = UserFollow.objects.get_or_create(
             follower=request.user,
             following=target_user
@@ -186,3 +200,79 @@ class UserFollowingView(APIView):
             })
             
         return Response(data)
+
+
+class RedeemReferralView(APIView):
+    """View to redeem a referral code."""
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        code = request.data.get('code')
+        
+        if not code:
+            return Response({'error': 'Referral code is required'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        try:
+            profile = request.user.profile
+        except UserProfile.DoesNotExist:
+            return Response({'error': 'User profile not found'}, status=status.HTTP_404_NOT_FOUND)
+            
+        if profile.referred_by:
+            return Response({'error': 'You have already redeemed a referral code'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        if profile.referral_code == code:
+            return Response({'error': 'Cannot redeem your own referral code'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        try:
+            referrer_profile = UserProfile.objects.get(referral_code=code)
+        except UserProfile.DoesNotExist:
+            return Response({'error': 'Invalid referral code'}, status=status.HTTP_404_NOT_FOUND)
+            
+        # Update user profile
+        profile.referred_by = referrer_profile.user
+        profile.xp += 100  # Award 100 XP
+        profile.save()
+        
+        return Response({
+            'message': 'Referral code redeemed successfully',
+            'xp_awarded': 100,
+            'new_total_xp': profile.xp
+        })
+
+
+class UserListView(APIView):
+    """View to list all users for admin."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if not (request.user.is_staff or request.user.is_superuser):
+             return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+        
+        users = User.objects.all().order_by('-date_joined')
+        return Response(UserSerializer(users, many=True).data)
+
+
+class UserBlockToggleView(APIView):
+    """View to toggle user active status."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, username):
+        if not (request.user.is_staff or request.user.is_superuser):
+             return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+        
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        if user == request.user:
+             return Response({'error': 'Cannot block yourself'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Toggle status directly on user model
+        user.is_active = not user.is_active
+        user.save()
+        
+        return Response({
+            'message': f"User {'unblocked' if user.is_active else 'blocked'} successfully",
+            'is_active': user.is_active
+        })

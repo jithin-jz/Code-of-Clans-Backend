@@ -32,9 +32,10 @@ INSTALLED_APPS = [
     "rest_framework",
     "corsheaders",
 
-    "authentication",
-    "chat",
+    'auth',
+    'chat',
     'rewards',
+    'users',
 ]
 
 # Middleware
@@ -145,7 +146,7 @@ CORS_ALLOW_CREDENTIALS = True
 # Django REST Framework
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "authentication.authentication.JWTAuthentication",
+        "auth.authentication.JWTAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",

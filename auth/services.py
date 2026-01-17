@@ -11,8 +11,10 @@ from .utils import (
     get_google_access_token,
     get_google_user,
     get_discord_access_token,
+    get_discord_access_token,
     get_discord_user,
 )
+from .emails import send_welcome_email
 
 logger = logging.getLogger(__name__)
 
@@ -201,6 +203,9 @@ class AuthService:
         
         # Create associated UserProfile
         AuthService._create_profile(user, provider, user_info, tokens)
+        
+        # Send Welcome Email (Non-blocking ideally, but here sync for now)
+        send_welcome_email(user)
         
         return user
 
